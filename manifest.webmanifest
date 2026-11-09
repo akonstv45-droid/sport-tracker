@@ -1,0 +1,23 @@
+{
+  "id": "./",
+  "name": "Sport Tracker – מעקב ספורט",
+  "short_name": "Sport Tracker",
+  "description": "מעקב אישי אחר מדדי ספורט, ריצה, מרחק וזמן.",
+  "lang": "he",
+  "dir": "rtl",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#101827",
+  "theme_color": "#101827",
+  "categories": ["health", "fitness", "sports"],
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
