@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#101827">
+<meta name="application-name" content="Sport Tracker">
+<title>Sport Tracker – מעקב ספורט</title>
+<link rel="manifest" href="./manifest.webmanifest">
+<link rel="icon" href="./icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="./icon.svg">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+:root{color-scheme:dark;--bg:#101827;--panel:#182438;--panel2:#202f46;--text:#f4f7fb;--muted:#a9b7ca;--line:#34445d;--accent:#27c3a2;--danger:#ff8a8a}
+*{box-sizing:border-box}body{margin:0;background:linear-gradient(160deg,#101827,#111d30 65%,#13283a);color:var(--text);font-family:system-ui,-apple-system,"Segoe UI",Arial,sans-serif;min-height:100vh}
+main{max-width:900px;margin:auto;padding:20px 14px 40px}header{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+h1{font-size:clamp(25px,6vw,34px);margin:3px 0 5px}h2{font-size:19px;margin:0 0 5px}p{margin:4px 0;color:var(--muted);line-height:1.5}
+.badge{background:#173e40;color:#a4f3df;border:1px solid #28665f;border-radius:99px;padding:8px 12px;font-size:12px}
+.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:14px}.card{background:rgba(24,36,56,.96);border:1px solid var(--line);border-radius:17px;padding:15px;min-width:0;margin-bottom:14px}
+.stat-label{font-size:12px;color:var(--muted)}.stat{font-size:26px;font-weight:800;margin:7px 0 3px;overflow-wrap:anywhere}.cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:13px;color:var(--muted);font-weight:650;margin:0 0 6px}input,select,button{font:inherit}
+input,select{width:100%;min-height:46px;padding:10px 12px;border:1px solid var(--line);border-radius:11px;background:#101b2b;color:var(--text);font-size:16px}
+.field{margin-bottom:12px}.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+button{min-height:44px;border:1px solid var(--line);border-radius:11px;padding:10px 14px;background:var(--panel2);color:var(--text);font-weight:700;cursor:pointer}
+button.primary{background:var(--accent);border-color:var(--accent);color:#08231f;width:100%}button:disabled{opacity:.45;cursor:not-allowed}
+.status{background:#132f35;border:1px solid #28665f;color:#b5f5e5;padding:10px 12px;border-radius:12px;font-size:13px;margin-bottom:14px}.status.warn{background:#3a2c1b;border-color:#76562a;color:#ffe0a5}
+.small{font-size:12px;color:var(--muted)}.chart{width:100%;overflow:hidden}.chart svg{width:100%;height:auto;display:block}
+.history{display:grid;gap:8px}.entry{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:10px 11px;min-width:0}
+.entry-info{min-width:0}.entry-title{font-weight:700}.entry-sub{font-size:12px;color:var(--muted);margin-top:3px}.entry-right{display:flex;align-items:center;gap:8px;flex-shrink:0}.entry-value{font-weight:750;font-size:14px}
+.delete{min-height:36px;padding:6px 9px;font-size:12px;color:#ffc0c0}.notice{font-size:12px;background:#13283a;border:1px solid var(--line);border-radius:12px;padding:12px;color:var(--muted);line-height:1.55}
+.install-btn{background:#27c3a2;color:#08231f;border:0;border-radius:11px;padding:9px 12px;min-height:42px;font-weight:800;font-size:13px}.header-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}.hidden{display:none!important}
+@media(max-width:620px){main{padding:16px 12px 32px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.grid .card:last-child{grid-column:1/-1}.cols{grid-template-columns:1fr}.card{padding:13px}.stat{font-size:23px}}
+@media(max-width:360px){.entry{align-items:flex-start;flex-direction:column}.entry-right{width:100%;justify-content:space-between}}
+</style>
+</head>
+<body>
+<main>
+<header>
+ <div><div class="small">הביצועים שלך, במקום אחד</div><h1>🏆 מעקב ההתקדמות שלי</h1><p>תעד מדידות, עקוב אחר שיאים וראה כמה התקדמת.</p></div>
+ <div class="header-actions"><span class="badge">● מעקב אישי</span><button id="installButton" class="install-btn hidden" type="button">התקן בטלפון ⬇</button></div>
+</header>
+<div id="saveStatus" class="status" role="status" aria-live="polite">טוען נתונים שמורים...</div>
+<section class="grid">
+ <div class="card"><div class="stat-label">סה״כ מדידות</div><div class="stat" id="total">0</div><div class="small">מדידות שתיעדת</div></div>
+ <div class="card"><div class="stat-label">מדדים במעקב</div><div class="stat" id="count">0</div><div class="small">סוגי ביצועים</div></div>
+ <div class="card"><div class="stat-label">המדידה האחרונה</div><div class="stat" id="latest" style="font-size:19px">—</div><div class="small" id="latestDate">עדיין אין נתונים</div></div>
+</section>
+<div class="cols">
+<section class="card">
+ <h2>➕ הוספת מדידה</h2><p class="small" style="margin-bottom:14px">בריצה אפשר לתעד מרחק וזמן יחד באותה מדידה.</p>
+ <form id="entryForm">
+  <div class="field"><label for="metric">סוג המדד</label><select id="metric">
+   <option value="pullups">מתח – חזרות</option><option value="pushups">שכיבות סמיכה – חזרות</option><option value="run">ריצה – מרחק + זמן</option><option value="squat">סקוואטים – חזרות</option><option value="plank">פלאנק – שניות</option><option value="weight">משקל גוף – ק״ג</option><option value="custom">מדד אישי – הגדרה עצמית</option>
+  </select></div>
+  <div id="customFields" class="row hidden">
+   <div class="field" style="flex:1"><label for="customName">שם המדד</label><input id="customName" maxlength="35" placeholder="למשל: לחיצת חזה"></div>
+   <div class="field" style="flex:1"><label for="customUnit">יחידת מדידה</label><input id="customUnit" maxlength="12" placeholder="ק״ג / חזרות"></div>
+  </div>
+  <div id="runFields" class="hidden">
+   <p class="small" style="margin:0 0 10px">רשום את המרחק ואת הזמן של אותה ריצה. אפשר לעקוב אחר כל אחד מהם בגרף.</p>
+   <div class="field"><label for="runDistance">מרחק ריצה (ק״מ)</label><input id="runDistance" type="number" min="0.01" max="1000" step="0.01" placeholder="לדוגמה: 3.5"></div>
+   <div class="row">
+    <div class="field" style="flex:1"><label for="runMinutes">זמן – דקות</label><input id="runMinutes" type="number" min="0" max="9999" step="1" value="0"></div>
+    <div class="field" style="flex:1"><label for="runSeconds">שניות</label><input id="runSeconds" type="number" min="0" max="59" step="1" value="0"></div>
+   </div>
+  </div>
+  <div class="field" id="valueField"><label for="value">התוצאה שלך</label><input id="value" type="number" min=".01" max="1000000" step="any" placeholder="הכנס תוצאה" required></div>
+  <div class="field"><label for="date">תאריך המדידה</label><input id="date" type="date" required></div>
+  <p id="error" class="small" style="color:var(--danger);margin-bottom:10px" role="alert"></p>
+  <button class="primary" type="submit">שמור מדידה ＋</button>
+ </form>
+</section>
+<section class="card">
+ <h2>📈 גרף התקדמות</h2><p class="small" style="margin-bottom:12px">השווה את הביצועים שלך לאורך זמן.</p>
+ <div class="field"><label for="chartMetric">בחר מדד להצגה</label><select id="chartMetric" disabled><option>ממתין למדידות</option></select></div>
+ <div id="chart" class="chart"><p style="text-align:center;padding:30px 5px">הגרף יופיע לאחר שתוסיף מדידה.</p></div>
+ <div class="row" style="margin-top:12px">
+  <div style="flex:1;min-width:120px;background:#101b2b;border-radius:12px;padding:12px"><div class="small">שיא אישי</div><strong id="best" style="font-size:19px">—</strong></div>
+  <div style="flex:1;min-width:120px;background:#101b2b;border-radius:12px;padding:12px"><div class="small">שינוי מהמדידה הראשונה</div><strong id="change" style="font-size:19px">—</strong></div>
+ </div>
+ <p id="direction" class="small" style="margin-top:10px">בחר מדד כדי לראות את סיכום ההתקדמות.</p>
+</section>
+</div>
+<section class="card">
+ <div class="row" style="justify-content:space-between;margin-bottom:12px">
+  <div><h2>📋 היסטוריית מדידות</h2><p class="small">כל התוצאות שתיעדת, מהחדשה לישנה.</p></div>
+  <button id="export" disabled>הורדת גיבוי CSV ↓</button>
+ </div>
+ <div id="history" class="history"><p style="text-align:center;padding:20px">עדיין אין מדידות. הוסף את המדידה הראשונה שלך!</p></div>
+ <p id="historyNote" class="small" style="margin-top:9px"></p>
+</section>
+<div class="notice" style="margin-bottom:12px"><strong>📲 התקנת האפליקציה</strong><br>פתח את הקישור המאובטח ב-Chrome ולחץ על „התקן בטלפון”. אם הכפתור אינו מופיע, פתח את תפריט הדפדפן ובחר „התקנת אפליקציה” או „הוספה למסך הבית”.</div>
+<div class="notice"><strong>💾 שמירה אוטומטית</strong><br>המדידות נשמרות בדפדפן במכשיר שלך. בפעם הבאה שתפתח את האפליקציה, המדידות ייטענו מחדש. מומלץ להוריד מדי פעם גיבוי CSV. הנתונים אינם מסתנכרנים אוטומטית בין מכשירים, ומחיקת נתוני הדפדפן עלולה למחוק אותם.</div>
+</main>
+<script>
+(()=>{
+'use strict';
+const $=id=>document.getElementById(id);
+const presets={
+ pullups:{name:'מתח',unit:'חזרות',direction:'high'},pushups:{name:'שכיבות סמיכה',unit:'חזרות',direction:'high'},
+ squat:{name:'סקוואטים',unit:'חזרות',direction:'high'},plank:{name:'פלאנק',unit:'שניות',direction:'high'},
+ weight:{name:'משקל גוף',unit:'ק״ג',direction:'neutral'}
+};
+let records=[],selected='',db=null,ready=false;
+const today=()=>{let d=new Date();return [d.getFullYear(),String(d.getMonth()+1).padStart(2,'0'),String(d.getDate()).padStart(2,'0')].join('-')};
+$('date').value=today();
+const fmt=n=>Number(n).toLocaleString('he-IL',{maximumFractionDigits:2});
+const dateFmt=s=>{let p=s.split('-');return p.length===3?p[2]+'/'+p[1]+'/'+p[0]:s};
+const timeLabel=s=>{let t=Math.round(s),m=Math.floor(t/60),sec=t%60;return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0')};
+const metricOf=r=>r.custom||presets[r.key]||{name:'מדד אישי',unit:'',direction:'neutral'};
+function status(msg,ok=true){$('saveStatus').textContent=(ok?'✓ ':'⚠️ ')+msg;$('saveStatus').classList.toggle('warn',!ok)}
+function openDB(){return new Promise((resolve,reject)=>{if(!window.indexedDB)return reject(Error('IndexedDB unavailable'));let q=indexedDB.open('SportTrackerPWA',1);q.onupgradeneeded=()=>{if(!q.result.objectStoreNames.contains('data'))q.result.createObjectStore('data')};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+function dbRead(){return new Promise((resolve,reject)=>{let tx=db.transaction('data','readonly'),q=tx.objectStore('data').get('records');q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error)})}
+function dbWrite(snapshot){return new Promise((resolve,reject)=>{let tx=db.transaction('data','readwrite');tx.objectStore('data').put(snapshot,'records');tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);tx.onabort=()=>reject(tx.error)})}
+async function save(){let snapshot=records.map(r=>({...r})),ok=false;try{localStorage.setItem('sportTrackerRecordsV1',JSON.stringify(snapshot));ok=true}catch(e){}if(db){try{await dbWrite(snapshot);ok=true}catch(e){}}status(ok?'הנתונים נשמרו אוטומטית במכשיר שלך':'השמירה נכשלה. מומלץ להוריד גיבוי CSV.',ok);return ok}
+async function init(){try{db=await openDB();let data=await dbRead();if(Array.isArray(data))records=data;else{let local=localStorage.getItem('sportTrackerRecordsV1');if(local){let parsed=JSON.parse(local);if(Array.isArray(parsed))records=parsed}}status('הנתונים השמורים נטענו בהצלחה')}catch(e){db=null;try{let local=localStorage.getItem('sportTrackerRecordsV1');if(local){let parsed=JSON.parse(local);if(Array.isArray(parsed))records=parsed}status('הנתונים נטענו מהאחסון המקומי')}catch(err){status('האחסון אינו זמין. אפשר להמשיך, אך יש להוריד גיבוי CSV.',false)}}ready=true;render()}
+function updateFields(){let run=$('metric').value==='run',custom=$('metric').value==='custom';$('customFields').classList.toggle('hidden',!custom);$('runFields').classList.toggle('hidden',!run);$('valueField').classList.toggle('hidden',run);$('value').required=!run;$('runDistance').required=run;['runDistance','runMinutes','runSeconds'].forEach(id=>$(id).disabled=!run);$('error').textContent=''}
+$('metric').addEventListener('change',updateFields);updateFields();
+$('entryForm').addEventListener('submit',async e=>{e.preventDefault();$('error').textContent='';if(!ready)return;let date=$('date').value,choice=$('metric').value;if(!date||date>today()){$('error').textContent='בחר תאריך תקין שאינו בעתיד.';return}if(records.length>=5000){$('error').textContent='הגעת למגבלת 5,000 מדידות. הורד גיבוי לפני המשך.';return}let key=choice,custom=null,record;if(choice==='run'){let distance=Number($('runDistance').value),minutes=Number($('runMinutes').value),seconds=Number($('runSeconds').value);if(!Number.isFinite(distance)||distance<=0||distance>1000){$('error').textContent='יש להזין מרחק ריצה תקין בקילומטרים.';return}if(!Number.isInteger(minutes)||minutes<0||minutes>9999||!Number.isInteger(seconds)||seconds<0||seconds>59||minutes*60+seconds<=0){$('error').textContent='יש להזין זמן תקין. השניות חייבות להיות בין 0 ל־59.';return}record={id:Date.now()+Math.random(),key:'run',distanceKm:distance,durationSeconds:minutes*60+seconds,date:date,custom:null};selected='run:distance'}else{let value=Number($('value').value);if(!Number.isFinite(value)||value<=0||value>1000000){$('error').textContent='יש להזין תוצאה חיובית ותקינה.';return}if(choice==='custom'){let name=$('customName').value.trim(),unit=$('customUnit').value.trim();if(!name||!unit){$('error').textContent='יש למלא שם מדד ויחידת מדידה.';return}custom={name:name,unit:unit,direction:'neutral'};key='custom:'+name.toLowerCase()+'|'+unit.toLowerCase()}record={id:Date.now()+Math.random(),key:key,value:value,date:date,custom:custom};selected=key}records.push(record);$('value').value='';$('runDistance').value='';$('runMinutes').value='0';$('runSeconds').value='0';render();await save()});
+$('chartMetric').addEventListener('change',e=>{selected=e.target.value;renderChart()});
+function chartSeries(){let out={};records.forEach(r=>{if(r.key==='run'){(out['run:distance']||(out['run:distance']=[])).push({date:r.date,value:r.distanceKm,record:r});(out['run:time']||(out['run:time']=[])).push({date:r.date,value:r.durationSeconds,record:r})}else{(out[r.key]||(out[r.key]=[])).push({date:r.date,value:r.value,record:r})}});Object.values(out).forEach(a=>a.sort((x,y)=>x.date.localeCompare(y.date)||x.record.id-y.record.id));return out}
+function seriesMeta(key,list){if(key==='run:distance')return{name:'ריצה – מרחק',unit:'ק״מ',direction:'high'};if(key==='run:time')return{name:'ריצה – זמן',unit:'דקות:שניות',direction:'low'};return metricOf(list[0].record)}
+function seriesValue(v,key){return key==='run:time'?timeLabel(v):fmt(v)}
+function render(){let g=chartSeries(),keys=Object.keys(g);$('total').textContent=records.length;$('count').textContent=new Set(records.map(r=>r.key)).size;let latest=records.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id)[0];$('latest').textContent=latest?(latest.key==='run'?fmt(latest.distanceKm)+' ק״מ · '+timeLabel(latest.durationSeconds):fmt(latest.value)+' '+metricOf(latest).unit):'—';$('latestDate').textContent=latest?(latest.key==='run'?'ריצה':metricOf(latest).name)+' · '+dateFmt(latest.date):'עדיין אין נתונים';let sel=$('chartMetric');sel.innerHTML='';keys.forEach(k=>{let o=document.createElement('option');o.value=k;o.textContent=seriesMeta(k,g[k]).name+' ('+seriesMeta(k,g[k]).unit+')';sel.append(o)});sel.disabled=!keys.length;if(!keys.includes(selected))selected=keys[0]||'';sel.value=selected;renderChart();renderHistory();$('export').disabled=!records.length}
+function renderChart(){let list=chartSeries()[selected]||[],box=$('chart');if(!list.length){box.innerHTML='<p style="text-align:center;padding:30px 5px">הגרף יופיע לאחר שתוסיף מדידה.</p>';$('best').textContent='—';$('change').textContent='—';$('direction').textContent='בחר מדד כדי לראות את סיכום ההתקדמות.';return}let meta=seriesMeta(selected,list),vals=list.map(r=>r.value),min=Math.min(...vals),max=Math.max(...vals),span=max-min||Math.max(max*.15,1),lo=Math.max(0,min-span*.15),hi=max+span*.15;let x=i=>list.length===1?340:52+i*570/(list.length-1),y=v=>185-(v-lo)/(hi-lo||1)*140;let svg='<svg viewBox="0 0 680 235" role="img" aria-label="גרף התקדמות">';for(let i=0;i<4;i++){let yy=32+i*47,v=hi-(hi-lo)*i/3;svg+='<line x1="48" y1="'+yy+'" x2="645" y2="'+yy+'" stroke="#34445d" stroke-dasharray="3 4"/><text x="42" y="'+(yy+4)+'" text-anchor="end" font-size="11" fill="#a9b7ca">'+seriesValue(v,selected)+'</text>'}let points=list.length>80?Array.from({length:80},(_,i)=>list[Math.round(i*(list.length-1)/79)]):list;if(points.length>1)svg+='<polyline points="'+points.map(r=>x(list.indexOf(r))+','+y(r.value)).join(' ')+'" fill="none" stroke="#27c3a2" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>';points.forEach(r=>{let i=list.indexOf(r);svg+='<circle cx="'+x(i)+'" cy="'+y(r.value)+'" r="5" fill="#27c3a2" stroke="#182438" stroke-width="2"/><text x="'+x(i)+'" y="'+Math.max(17,y(r.value)-12)+'" text-anchor="middle" font-size="11" font-weight="bold" fill="#f4f7fb">'+seriesValue(r.value,selected)+'</text>'});svg+='<text x="55" y="220" font-size="11" fill="#a9b7ca">'+dateFmt(list[0].date)+'</text><text x="640" y="220" text-anchor="end" font-size="11" fill="#a9b7ca">'+dateFmt(list[list.length-1].date)+'</text></svg>';box.innerHTML=svg;let best=meta.direction==='low'?Math.min(...vals):Math.max(...vals);if(meta.direction==='neutral')best=list[list.length-1].value;$('best').textContent=seriesValue(best,selected)+' '+meta.unit;let first=list[0],last=list[list.length-1],delta=meta.direction==='high'?last.value-first.value:meta.direction==='low'?first.value-last.value:last.value-first.value;$('change').textContent=(delta>0?'+':delta<0?'-':'')+seriesValue(Math.abs(delta),selected)+' '+meta.unit;$('direction').textContent=meta.direction==='neutral'?'מדד זה מוצג כשינוי בערך, ללא הגדרה אוטומטית של שיפור.':list.length===1?'נדרשת מדידה נוספת כדי לחשב שינוי.':delta>0?'📈 שיפור של '+seriesValue(Math.abs(delta),selected)+' '+meta.unit+' מאז המדידה הראשונה.':delta<0?'המדד השתנה ב-'+seriesValue(Math.abs(delta),selected)+' '+meta.unit+' בכיוון הפחות טוב.':'הביצועים נשארו זהים בין המדידה הראשונה לאחרונה.'}
+function renderHistory(){let sorted=records.slice().sort((a,b)=>b.date.localeCompare(a.date)||b.id-a.id),box=$('history');box.innerHTML='';if(!sorted.length){box.innerHTML='<p style="text-align:center;padding:20px">עדיין אין מדידות. הוסף את המדידה הראשונה שלך!</p>';$('historyNote').textContent='';return}sorted.slice(0,20).forEach(r=>{let m=metricOf(r),row=document.createElement('div');row.className='entry';let info=document.createElement('div');info.className='entry-info';let title=document.createElement('div');title.className='entry-title';title.textContent=r.key==='run'?'ריצה':m.name;let sub=document.createElement('div');sub.className='entry-sub';sub.textContent=dateFmt(r.date);info.append(title,sub);let right=document.createElement('div');right.className='entry-right';let value=document.createElement('strong');value.className='entry-value';value.textContent=r.key==='run'?fmt(r.distanceKm)+' ק״מ · '+timeLabel(r.durationSeconds):fmt(r.value)+' '+m.unit;let del=document.createElement('button');del.className='delete';del.textContent='מחיקה';del.setAttribute('aria-label','מחיקת מדידה '+(r.key==='run'?'ריצה':m.name));del.addEventListener('click',async()=>{records=records.filter(x=>x.id!==r.id);render();await save()});right.append(value,del);row.append(info,right);box.append(row)});$('historyNote').textContent=sorted.length>20?'מוצגות 20 המדידות האחרונות מתוך '+sorted.length+'. קובץ הגיבוי כולל את כולן.':''}
+$('export').addEventListener('click',()=>{if(!records.length)return;let rows=[['תאריך','מדד','תוצאה','יחידה','מרחק בק״מ','זמן בדקות','זמן בשניות'],...records.slice().sort((a,b)=>a.date.localeCompare(b.date)).map(r=>{let m=metricOf(r);if(r.key==='run'){let mins=Math.floor(r.durationSeconds/60),secs=r.durationSeconds%60;return[r.date,'ריצה',fmt(r.distanceKm)+' ק״מ · '+timeLabel(r.durationSeconds),'מרחק וזמן',r.distanceKm,mins,secs]}return[r.date,m.name,r.value,m.unit,'','','']})];let csv='\uFEFF'+rows.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(',')).join('\r\n'),blob=new Blob([csv],{type:'text/csv;charset=utf-8'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='sport-progress.csv';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),1500)});
+render();init();
+})();
+</script>
+<script>
+(()=>{if('serviceWorker'in navigator&&location.protocol!=='file:'){window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}))}let deferred=null,button=document.getElementById('installButton');if(!button)return;window.addEventListener('beforeinstallprompt',e=>{e.preventDefault();deferred=e;button.classList.remove('hidden')});button.addEventListener('click',async()=>{if(!deferred)return;deferred.prompt();try{await deferred.userChoice}catch(e){}deferred=null;button.classList.add('hidden')});window.addEventListener('appinstalled',()=>button.classList.add('hidden'))})();
+</script>
+</body>
+</html>
